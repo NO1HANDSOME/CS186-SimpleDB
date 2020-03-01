@@ -1,1 +1,0 @@
-# CS186-SimpleDB
