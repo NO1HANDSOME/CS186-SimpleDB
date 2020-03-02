@@ -7,61 +7,67 @@ import java.io.Serializable;
  * specific table.
  */
 public class RecordId implements Serializable {
+	private PageId pageId;
+	private int tupleno;
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Creates a new RecordId referring to the specified PageId and tuple
-     * number.
-     * 
-     * @param pid
-     *            the pageid of the page on which the tuple resides
-     * @param tupleno
-     *            the tuple number within the page.
-     */
-    public RecordId(PageId pid, int tupleno) {
-        // some code goes here
-    }
+	/**
+	 * Creates a new RecordId referring to the specified PageId and tuple number.
+	 * 
+	 * @param pid     the pageid of the page on which the tuple resides
+	 * @param tupleno the tuple number within the page.
+	 */
+	public RecordId(PageId pid, int tupleno) {
+		// some code goes here
+		pid = pageId;
+		this.tupleno = tupleno;
+	}
 
-    /**
-     * @return the tuple number this RecordId references.
-     */
-    public int tupleno() {
-        // some code goes here
-        return 0;
-    }
+	/**
+	 * @return the tuple number this RecordId references.
+	 */
+	public int tupleno() {
+		// some code goes here
+		return tupleno;
+	}
 
-    /**
-     * @return the page id this RecordId references.
-     */
-    public PageId getPageId() {
-        // some code goes here
-        return null;
-    }
+	/**
+	 * @return the page id this RecordId references.
+	 */
+	public PageId getPageId() {
+		// some code goes here
+		return pageId;
+	}
 
-    /**
-     * Two RecordId objects are considered equal if they represent the same
-     * tuple.
-     * 
-     * @return True if this and o represent the same tuple
-     */
-    @Override
-    public boolean equals(Object o) {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-    }
+	/**
+	 * Two RecordId objects are considered equal if they represent the same tuple.
+	 * 
+	 * @return True if this and o represent the same tuple
+	 */
+	@Override
+	public boolean equals(Object o) {
+		// some code goes here
+		if (o == this)
+			return true;
+		if (!(o instanceof RecordId))
+			return false;
+		RecordId anontherId = (RecordId) o;
+		// 比较两个ID所指向的pageId和tupleno是否相同
+		return (anontherId.pageId.equals(pageId) && anontherId.tupleno == tupleno);
+	}
 
-    /**
-     * You should implement the hashCode() so that two equal RecordId instances
-     * (with respect to equals()) have the same hashCode().
-     * 
-     * @return An int that is the same for equal RecordId objects.
-     */
-    @Override
-    public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
-    }
+	/**
+	 * You should implement the hashCode() so that two equal RecordId instances
+	 * (with respect to equals()) have the same hashCode().
+	 * 
+	 * @return An int that is the same for equal RecordId objects.
+	 */
+	@Override
+	public int hashCode() {
+		// some code goes here
+		int hashcode = 31 * pageId.hashCode() + tupleno;
+		return hashcode;
+	}
 
 }

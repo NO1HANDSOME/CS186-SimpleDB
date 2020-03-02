@@ -92,10 +92,10 @@ public class Tuple implements Serializable {
 		// some code goes here
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < fields.length; i++) {
-			sb.append("\t"+fields[i]);
+			sb.append("\t" + fields[i]);
 		}
 		sb.append('\n');
-		return sb.toString().stripLeading();
+		return sb.toString().trim();
 	}
 
 	/**
