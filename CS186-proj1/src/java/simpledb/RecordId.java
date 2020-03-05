@@ -20,7 +20,7 @@ public class RecordId implements Serializable {
 	 */
 	public RecordId(PageId pid, int tupleno) {
 		// some code goes here
-		pid = pageId;
+		this.pageId = pid;
 		this.tupleno = tupleno;
 	}
 

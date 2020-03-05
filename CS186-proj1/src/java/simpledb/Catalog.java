@@ -15,27 +15,30 @@ import java.util.*;
 
 public class Catalog {
 
-	private class Table {
-		public DbFile contents;
-		public String name;
-		public String pkey;
+	// 存储磁盘文件对象
+	private HashMap<Integer, DbFile> id2file;
+	// 存储关系约束
+	private HashMap<Integer, String> id2pkey;
+	// 存储关系名称
+	private HashMap<Integer, String> id2name;
 
-		public Table(DbFile contents, String name, String pkey) {
-			this.contents = contents;
-			this.name = name;
-			this.pkey = pkey;
-		}
+	private HashMap<String, Integer> name2id;
 
-	}
-
-	private ArrayList<Table> tables;
+	// 关系的总数
+	private int size;
 
 	/**
 	 * Constructor. Creates a new, empty catalog.
+	 * 个人认为，catalog相当于数据库的总表或者说数据库元数据字典.在数据库系统概念的第十章第七节有简单的介绍.
+	 * DBMS想要找到某个关系，需要通过Catalog.
 	 */
 	public Catalog() {
 		// some code goes here
-		tables = new ArrayList<Table>();
+		id2file = new HashMap<>();
+		id2pkey = new HashMap<>();
+		id2name = new HashMap<>();
+		name2id = new HashMap<>();
+		size = 0;
 	}
 
 	/**
@@ -52,8 +55,19 @@ public class Catalog {
 	 */
 	public void addTable(DbFile file, String name, String pkeyField) {
 		// some code goes here
-		Table table = new Table(file, name, pkeyField);
-		tables.add(table);
+		if (name == null || pkeyField == null) {
+			throw new IllegalArgumentException();
+		}
+		int tableid = file.getId();
+		if (name2id.containsKey(name)) {
+			// use the last table to be added as the table for a given name.
+			throw new UnsupportedOperationException("目前不支持添加相同名字的table");
+		}
+		id2file.put(tableid, file);
+		id2name.put(tableid, name);
+		id2pkey.put(tableid, pkeyField);
+		name2id.put(name, tableid);
+		size++;
 	}
 
 	public void addTable(DbFile file, String name) {
@@ -79,13 +93,10 @@ public class Catalog {
 	 */
 	public int getTableId(String name) throws NoSuchElementException {
 		// some code goes here
-		Iterator<Table> iterator = tables.iterator();
-		while (iterator.hasNext()) {
-			Table temp = iterator.next();
-			if (temp.name.equals(name))
-				return temp.contents.getId();
+		if (name == null || !name2id.containsKey(name)) {
+			throw new NoSuchElementException();
 		}
-		throw new NoSuchElementException();
+		return name2id.get(name);
 	}
 
 	/**
@@ -109,47 +120,41 @@ public class Catalog {
 	 */
 	public DbFile getDbFile(int tableid) throws NoSuchElementException {
 		// some code goes here
-		Table targetTable = getTable(tableid);
-		return targetTable.contents;
+		if (!id2file.containsKey(tableid)) {
+			throw new NoSuchElementException();
+		}
+		return id2file.get(tableid);
 	}
 
 	public String getPrimaryKey(int tableid) throws NoSuchElementException {
 		// some code goes here
-		Table targetTable = getTable(tableid);
-		return targetTable.pkey;
+		if (!id2pkey.containsKey(tableid)) {
+			throw new NoSuchElementException();
+		}
+		return id2pkey.get(tableid);
 	}
 
-	// 有待优化
 	public Iterator<Integer> tableIdIterator() {
 		// some code goes here
-		ArrayList<Integer> temp = new ArrayList<Integer>();
-		for (Table table : tables) {
-			temp.add(table.contents.getId());
-		}
-		return temp.iterator();
+		return id2file.keySet().iterator();
 	}
 
 	public String getTableName(int id) throws NoSuchElementException {
 		// some code goes here
-		Table targetTable = getTable(id);
-		return targetTable.name;
+		if (!id2name.containsKey(id)) {
+			throw new NoSuchElementException();
+		}
+		return id2name.get(id);
 	}
 
 	/** Delete all tables from the catalog */
 	public void clear() {
 		// some code goes here
-		tables.clear();
-	}
-
-	// 或许能够使用映射的方法来加快查找的速度
-	private Table getTable(int tableid) throws NoSuchElementException {
-		Iterator<Table> iterator = tables.iterator();
-		while (iterator.hasNext()) {
-			Table temp = iterator.next();
-			if (temp.contents.getId() == tableid)
-				return temp;
-		}
-		throw new NoSuchElementException();
+		id2file.clear();
+		id2pkey.clear();
+		id2name.clear();
+		name2id.clear();
+		size = 0;
 	}
 
 	/**

@@ -69,7 +69,7 @@ public class HeapFileEncoder {
    /** Convert the specified input text file into a binary
     * page file. <br>
     * Assume format of the input file is (note that only integer fields are
-    * supported):<br>
+    * supported,用ASCII码表示字符):<br>
     * int,...,int\n<br>
     * int,...,int\n<br>
     * ...<br>
@@ -91,18 +91,19 @@ public class HeapFileEncoder {
                  int numFields, Type[] typeAr, char fieldSeparator)
       throws IOException {
 
-      int nrecbytes = 0;
+      int nrecbytes = 0;// 每条记录的字节数
       for (int i = 0; i < numFields ; i++) {
           nrecbytes += typeAr[i].getLen();
       }
+      // 每page的最大记录条数
       int nrecords = (npagebytes * 8) /  (nrecbytes * 8 + 1);  //floor comes for free
       
     //  per record, we need one bit; there are nrecords per page, so we need
     // nrecords bits, i.e., ((nrecords/32)+1) integers.
-    int nheaderbytes = (nrecords / 8);
+    int nheaderbytes = (nrecords / 8);// 注意后面一行
     if (nheaderbytes * 8 < nrecords)
         nheaderbytes++;  //ceiling
-    int nheaderbits = nheaderbytes * 8;
+    int nheaderbits = nheaderbytes * 8;// 头文件的位数
 
     BufferedReader br = new BufferedReader(new FileReader(inFile));
     FileOutputStream os = new FileOutputStream(outFile);
@@ -123,38 +124,39 @@ public class HeapFileEncoder {
     boolean done = false;
     boolean first = true;
     while (!done) {
-        int c = br.read();
+        int c = br.read();// 读一个字符
         
         // Ignore Windows/Notepad special line endings
         if (c == '\r')
             continue;
 
         if (c == '\n') {
-            if (first)
+            if (first)// 读完表头？
                 continue;
             recordcount++;
             first = true;
         } else
             first = false;
-        if (c == fieldSeparator || c == '\n' || c == '\r') {
+        
+        if (c == fieldSeparator || c == '\n' || c == '\r') {// 开始写数据
             String s = new String(buf, 0, curpos);
             if (typeAr[fieldNo] == Type.INT_TYPE) {
                 try {
-                    pageStream.writeInt(Integer.parseInt(s.trim()));
+                    pageStream.writeInt(Integer.parseInt(s.trim()));// 把整型写入输出流
                 } catch (NumberFormatException e) {
                     System.out.println ("BAD LINE : " + s);
                 }
             }
-            else   if (typeAr[fieldNo] == Type.STRING_TYPE) {
+            else   if (typeAr[fieldNo] == Type.STRING_TYPE) {// 这里要写入一段定长的数据
                 s = s.trim();
                 int overflow = Type.STRING_LEN - s.length();
-                if (overflow < 0) {
+                if (overflow < 0) {// 数据过长，去掉超长的部分
                     String news = s.substring(0,Type.STRING_LEN);
                     s  = news;
                 }
-                pageStream.writeInt(s.length());
-                pageStream.writeBytes(s);
-                while (overflow-- > 0)
+                pageStream.writeInt(s.length());// 写入有效数据的字节数
+                pageStream.writeBytes(s);// 写入有效数据
+                while (overflow-- > 0)// 用0填充定长区间剩余的部分
                     pageStream.write((byte)0);
             }
             curpos = 0;
@@ -163,10 +165,10 @@ public class HeapFileEncoder {
             else
                 fieldNo++;
             
-        } else if (c == -1) {
+        } else if (c == -1) {// 所有数据都读完了
             done = true;
             
-        } else {
+        } else {// 将读到的字符放入字符串缓冲区buf
             buf[curpos++] = (char)c;
             continue;
         }

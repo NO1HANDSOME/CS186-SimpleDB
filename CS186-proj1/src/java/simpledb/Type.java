@@ -12,7 +12,7 @@ public enum Type implements Serializable {
     INT_TYPE() {
         @Override
         public int getLen() {
-            return 4;
+            return 4;// 用4字节存储一个INT_TYPE的变量
         }
 
         @Override
@@ -36,7 +36,7 @@ public enum Type implements Serializable {
                 int strLen = dis.readInt();
                 byte bs[] = new byte[strLen];
                 dis.read(bs);
-                dis.skipBytes(STRING_LEN-strLen);
+                dis.skipBytes(STRING_LEN-strLen);// 跳过剩余无效字节部分
                 return new StringField(new String(bs), STRING_LEN);
             } catch (IOException e) {
                 throw new ParseException("couldn't parse", 0);
@@ -44,6 +44,9 @@ public enum Type implements Serializable {
         }
     };
     
+	/**
+	 * 默认最大128字节
+	 */
     public static final int STRING_LEN = 128;
 
   /**
