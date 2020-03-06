@@ -120,3 +120,12 @@ HeapFile的读取单位是Page，它有一个getPage方法如下：
 ## Operators
 
 在pro1中，只实现了SeqScan，蛮简单的，不再赘述。
+
+## Ref
+
+1. 数据库系统概念第六版
+
+2. How databases work：
+[http://coding-geek.com/how-databases-work/](http://coding-geek.com/how-databases-work/ "web1")
+
+3. 其他作者的项目：https://github.com/iamxpy/SimpleDB
