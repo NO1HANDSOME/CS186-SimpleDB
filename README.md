@@ -1,6 +1,16 @@
 # 数据存储
 
+**SimpleDb是一个支持transaction、SQL parser、SQL optimization的关系型数据库管理系统。**
+
 本文主要介绍SimpleDb的pro1实现部分并简要介绍原理。将按类文件来逐个介绍其实现思路，最后再介绍所有的类是如何协作以实现SimpleDb的数据存储功能的。
+
+在pro1中，SimpleDb主要实现了关系型数据库的数据存储功能：
+
+1. 将表的数据以二进制形式存储在磁盘上
+2. tuple支持定长记录
+3. 支持heap file organization的文件组织方式
+2. 实现Catalog，便于DBMS管理所有的表
+3. 实现BufferPool以减少DBMS的磁盘I/O，提高效率
 
 下面是SimpleDb_Homeworks主页面的链接：
 
