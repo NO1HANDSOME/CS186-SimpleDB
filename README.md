@@ -121,6 +121,83 @@ HeapFile的读取单位是Page，它有一个getPage方法如下：
 
 在pro1中，只实现了SeqScan，蛮简单的，不再赘述。
 
+## How do classes work together
+
+以进行一次SeqScan的代码介绍各个类是如何协作的:
+
+    package simpledb;
+
+	import java.io.*;
+
+	public class test {
+
+	public static void main(String[] argv) {
+
+		// construct a 3-column table schema
+		Type types[] = new Type[] { Type.INT_TYPE, Type.INT_TYPE, Type.INT_TYPE };
+		String names[] = new String[] { "field0", "field1", "field2" };
+		TupleDesc descriptor = new TupleDesc(types, names);
+
+		// create the table, associate it with some_data_file.dat
+		// and tell the catalog about the schema of this table.
+		HeapFile table1 = new HeapFile(new File("some_data_file.dat"), descriptor);
+		Database.getCatalog().addTable(table1, "test");
+
+		// construct the query: we use a simple SeqScan, which spoonfeeds
+		// tuples via its iterator.
+		TransactionId tid = new TransactionId();
+		SeqScan f = new SeqScan(tid, table1.getId());
+
+		try {
+			// and run it
+			f.open();
+			while (f.hasNext()) {
+				Tuple tup = f.next();
+				System.out.println(tup);
+			}
+			f.close();
+			Database.getBufferPool().transactionComplete(tid);
+		} catch (Exception e) {
+			System.out.println("Exception : " + e);
+			e.printStackTrace();
+		}
+	}
+
+}
+
+首先生成一个table的磁盘文件对象，然后添加进Catalog中
+
+		HeapFile table1 = new HeapFile(new File("some_data_file.dat"), descriptor);
+		Database.getCatalog().addTable(table1, "test");
+然后，生成一个SeqScan对象，用来进行全表扫描的操作
+
+		SeqScan f = new SeqScan(tid, table1.getId());
+
+启动SeqScan
+
+	f.open();
+
+下面是open函数执行的操作，主要是加载资源并启动DbfileItrator
+	
+	public void open() throws DbException, TransactionAbortedException {
+		// some code goes here
+		tableName = Database.getCatalog().getTableName(tableId);
+		td = Database.getCatalog().getTupleDesc(tableId);
+		dfileItrator = Database.getCatalog().getDbFile(tableId).iterator(tid);
+		dfileItrator.open();
+		isOpen = true;
+	}
+
+启动SeqScan内的DbfileItrator后，就可以迭代访问table的数据了
+
+	while (f.hasNext()) {
+		Tuple tup = f.next();
+		System.out.println(tup);
+	}
+
+最后要释放资源
+
+	f.close();
 ## Ref
 
 1. 数据库系统概念第六版
