@@ -76,12 +76,12 @@ public class HeapFileIterator implements DbFileIterator {
 	}
 
 	/**
-	 * 访问下一个元组
+	 * 访问下一个元组，如果当前的page已经读完，会跳转到下一个page进行读取。
 	 */
 	@Override
 	public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
 		if (tuplesInPage == null)// 迭代器没open
-			throw new NoSuchElementException("Iterator is null.");
+			throw new NoSuchElementException("Iterator is closed.");
 		if (!tuplesInPage.hasNext())
 			tuplesInPage = getTupleIterator(++curPageNo);
 		return tuplesInPage.next();
