@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 /**
- * Knows how to compute some aggregate over a set of IntFields.(注意只支持一个字段分组、一个字段聚合)
+ * Knows how to compute some aggregate over a set of
+ * IntFields.(注意只支持一个字段分组、一个字段聚合)
  */
 public class IntegerAggregator implements Aggregator {
 
@@ -64,8 +65,12 @@ public class IntegerAggregator implements Aggregator {
 		// some code goes here
 		if (!hasagTd)
 			getagTd(tup);
-		Field gbField = tup.getField(gbIndex);
+
+		Field gbField = null;
+		if (gbIndex != NO_GROUPING)
+			gbField = tup.getField(gbIndex);
 		IntField agField = (IntField) tup.getField(agIndex);
+
 		if (op.equals(Op.MIN)) {
 			min(gbField, agField);
 		} else if (op.equals(Op.MAX)) {
@@ -87,6 +92,8 @@ public class IntegerAggregator implements Aggregator {
 		Type[] typeArr;
 		String[] nameArr;
 		otd = tup.getTupleDesc();
+		if (otd.getFieldType(agIndex) != Type.INT_TYPE)
+			throw new IllegalArgumentException("聚合字段不是INT_TYPE");
 		if (gbIndex == NO_GROUPING) {
 			typeArr = new Type[] { otd.getFieldType(agIndex) };
 			nameArr = new String[] { otd.getFieldName(agIndex) };

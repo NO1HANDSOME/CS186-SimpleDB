@@ -65,10 +65,10 @@ public class TupleDesc implements Serializable {
 		tdItems = new ArrayList<TupleDesc.TDItem>();
 		// some code goes here
 		if (typeAr.length == 0) {
-			throw new IllegalArgumentException("typeAr[]需要至少包含一个元素");
+			throw new IllegalArgumentException("typeAr[].length == 0");
 		}
 		if (typeAr.length != fieldAr.length) {
-			throw new IllegalArgumentException("fieldAr[]长度必须和typeAr[]一致");
+			throw new IllegalArgumentException("fieldAr[].length != typeAr[].length");
 		}
 
 		for (int i = 0; i < typeAr.length; i++) {

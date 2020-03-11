@@ -246,6 +246,17 @@ public class HeapPage implements Page {
 	public void deleteTuple(Tuple t) throws DbException {
 		// some code goes here
 		// not necessary for lab1
+		RecordId id = t.getRecordId();
+		// 检查pageId是否一致
+		PageId delPage = id.getPageId();
+		if (!delPage.equals(pid))
+			throw new DbException("待删除Tuple不在这个Page上。");
+		// 检查待删除的元组是否存在
+		int tno = id.tupleno();
+		if (tno >= numSlots || !isSlotUsed(tno))
+			throw new DbException("待删除的元组位置越界或已空。");
+		// 标记待删除元组
+		markSlotUsed(tno, false);
 	}
 
 	/**
@@ -259,6 +270,20 @@ public class HeapPage implements Page {
 	public void insertTuple(Tuple t) throws DbException {
 		// some code goes here
 		// not necessary for lab1
+		if (!t.getTupleDesc().equals(td))
+			throw new DbException("tupledesc is mismatch.");
+		// 找一个位置插入
+		int tno = 0;
+		while (tno < numSlots) {
+			if (!isSlotUsed(tno)) {
+				t.setRecordId(new RecordId(pid, tno));
+				markSlotUsed(tno, true);
+				tuples[tno] = t;
+				return;
+			}
+			tno++;
+		}
+		throw new DbException("page is full.");
 	}
 
 	/**
@@ -315,6 +340,17 @@ public class HeapPage implements Page {
 	private void markSlotUsed(int i, boolean value) {
 		// some code goes here
 		// not necessary for lab1
+		int nByte = i / 8;
+		int nBit = i % 8;
+		// 表示位于字节b的第nBit的低位上
+		Byte b = header[nByte];
+
+		if (value)
+			b = (byte) (b | (1 << nBit));// 将第nBit位变为1
+		else
+			b = (byte) (b & ~(1 << nBit));// 将第nBit位变为0
+
+		header[nByte] = b;
 	}
 
 	/**

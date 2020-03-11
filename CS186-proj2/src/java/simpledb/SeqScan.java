@@ -43,6 +43,9 @@ public class SeqScan implements DbIterator {
 		this.tid = tid;
 		this.tableId = tableid;
 		this.alias = tableAlias;
+		this.td = Database.getCatalog().getTupleDesc(tableId);
+		this.tableName = Database.getCatalog().getTableName(tableId);
+		this.dfileItrator = Database.getCatalog().getDbFile(tableId).iterator(tid);
 	}
 
 	/**
@@ -50,8 +53,6 @@ public class SeqScan implements DbIterator {
 	 *         the actual name of the table in the catalog of the database
 	 */
 	public String getTableName() {
-		if (!isOpen)
-			throw new IllegalStateException("SeqScan is colsed.");
 		return tableName;
 	}
 
@@ -60,8 +61,6 @@ public class SeqScan implements DbIterator {
 	 */
 	public String getAlias() {
 		// some code goes here
-		if (!isOpen)
-			throw new IllegalStateException("SeqScan is colsed.");
 		return alias;
 	}
 
@@ -91,9 +90,6 @@ public class SeqScan implements DbIterator {
 
 	public void open() throws DbException, TransactionAbortedException {
 		// some code goes here
-		tableName = Database.getCatalog().getTableName(tableId);
-		td = Database.getCatalog().getTupleDesc(tableId);
-		dfileItrator = Database.getCatalog().getDbFile(tableId).iterator(tid);
 		dfileItrator.open();
 		isOpen = true;
 	}
@@ -108,8 +104,6 @@ public class SeqScan implements DbIterator {
 	 */
 	public TupleDesc getTupleDesc() {
 		// some code goes here
-		if (!isOpen)
-			throw new IllegalStateException("SeqScan is colsed.");
 		int len = td.numFields();
 		Type[] typeAr = new Type[len];
 		String[] nameAr = new String[len];
@@ -141,16 +135,12 @@ public class SeqScan implements DbIterator {
 
 	public void close() {
 		// some code goes here
-		if (!isOpen)
-			throw new IllegalStateException("SeqScan is colsed.");
 		dfileItrator.close();
 		isOpen = false;
 	}
 
 	public void rewind() throws DbException, NoSuchElementException, TransactionAbortedException {
 		// some code goes here
-		if (!isOpen)
-			throw new IllegalStateException("SeqScan is colsed.");
 		dfileItrator.rewind();
 	}
 }
