@@ -13,13 +13,16 @@ import java.io.*;
  */
 public class HeapPage implements Page {
 
-	HeapPageId pid;
-	TupleDesc td;
-	byte header[];
-	Tuple tuples[];
-	int numSlots;
+	private HeapPageId pid;
+	private TupleDesc td;
+	private byte header[];
+	private Tuple tuples[];
+	private int numSlots;
 
-	byte[] oldData;
+	private byte[] oldData;
+
+	private boolean isDirty;
+	private TransactionId tid;
 
 	/**
 	 * Create a HeapPage from a set of bytes of data read from disk. The format of a
@@ -63,6 +66,9 @@ public class HeapPage implements Page {
 		dis.close();
 
 		setBeforeImage();
+
+		isDirty = false;
+		tid = null;
 	}
 
 	/**
@@ -278,7 +284,7 @@ public class HeapPage implements Page {
 			if (!isSlotUsed(tno)) {
 				t.setRecordId(new RecordId(pid, tno));
 				markSlotUsed(tno, true);
-				tuples[tno] = t;
+				tuples[tno] = t;// 插入
 				return;
 			}
 			tno++;
@@ -289,20 +295,31 @@ public class HeapPage implements Page {
 	/**
 	 * Marks this page as dirty/not dirty and record that transaction that did the
 	 * dirtying
+	 * <p>
+	 * 不明白什么意思
 	 */
 	public void markDirty(boolean dirty, TransactionId tid) {
 		// some code goes here
 		// not necessary for lab1
+		if (dirty) {
+			this.tid = tid;
+			this.isDirty = true;
+		} else {
+			this.isDirty = false;
+			this.tid = null;
+		}
 	}
 
 	/**
 	 * Returns the tid of the transaction that last dirtied this page, or null if
 	 * the page is not dirty
+	 * <p>
+	 * 不明白什么意思
 	 */
 	public TransactionId isDirty() {
 		// some code goes here
 		// Not necessary for lab1
-		return null;
+		return tid;
 	}
 
 	/**

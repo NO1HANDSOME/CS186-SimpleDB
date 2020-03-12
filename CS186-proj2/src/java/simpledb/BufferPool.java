@@ -139,11 +139,12 @@ public class BufferPool {
 	/**
 	 * Add a tuple to the specified table behalf of transaction tid. Will acquire a
 	 * write lock on the page the tuple is added to(Lock acquisition is not needed
-	 * for lab2). May block if the lock cannot be acquired.
+	 * for lab2). May block if the lock cannot be acquired.(触发锁)
 	 * 
 	 * Marks any pages that were dirtied by the operation as dirty by calling their
 	 * markDirty bit, and updates cached versions of any pages that have been
-	 * dirtied so that future requests see up-to-date pages.
+	 * dirtied so that future requests see up-to-date pages.(更新缓存中的page)
+	 *
 	 *
 	 * @param tid     the transaction adding the tuple
 	 * @param tableId the table to add the tuple to
@@ -153,16 +154,19 @@ public class BufferPool {
 			throws DbException, IOException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for proj1
+		DbFile file = Database.getCatalog().getDbFile(tableId);
+		file.insertTuple(tid, t);// 注意markDirty等操作会在下层执行
 	}
 
 	/**
 	 * Remove the specified tuple from the buffer pool. Will acquire a write lock on
-	 * the page the tuple is removed from. May block if the lock cannot be acquired.
+	 * the page the tuple is removed from. May block if the lock cannot be
+	 * acquired.(触发锁)
 	 *
 	 * Marks any pages that were dirtied by the operation as dirty by calling their
 	 * markDirty bit. Does not need to update cached versions of any pages that have
 	 * been dirtied, as it is not possible that a new page was created during the
-	 * deletion (note difference from addTuple).
+	 * deletion (note difference from addTuple)(不明白什么意思).
 	 *
 	 * @param tid the transaction adding the tuple.
 	 * @param t   the tuple to add
@@ -170,6 +174,9 @@ public class BufferPool {
 	public void deleteTuple(TransactionId tid, Tuple t) throws DbException, TransactionAbortedException {
 		// some code goes here
 		// not necessary for proj1
+		int tableId = t.getRecordId().getPageId().getTableId();
+		DbFile file = Database.getCatalog().getDbFile(tableId);
+		file.deleteTuple(tid, t);// 注意markDirty等操作会在下层执行
 	}
 
 	/**

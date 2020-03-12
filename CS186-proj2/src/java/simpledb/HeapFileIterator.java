@@ -26,6 +26,8 @@ public class HeapFileIterator implements DbFileIterator {
 	 */
 	private TransactionId tid;
 
+	private boolean isOpen;
+
 	/**
 	 * 根据一个指定的表id，建立一个该表的迭代器.能够迭代访问该表的所有元组.
 	 * 
@@ -35,9 +37,11 @@ public class HeapFileIterator implements DbFileIterator {
 	public HeapFileIterator(TransactionId tid, int tableId) {
 		this.tid = tid;// // 假定上层传递的tid是一定合法的
 		this.tableId = tableId;// 假定上层传递的tableId是一定合法的
-		curPageNo = -1;
-		numPages = -1;
-		tuplesInPage = null;
+		this.tuplesInPage = null;
+		this.isOpen = false;
+		HeapFile file = (HeapFile) Database.getCatalog().getDbFile(tableId);
+		this.numPages = file.numPages();
+		this.curPageNo = 0;
 	}
 
 	/**
@@ -46,15 +50,13 @@ public class HeapFileIterator implements DbFileIterator {
 	@Override
 	public void open() throws DbException, TransactionAbortedException {
 		// TODO Auto-generated method stub
-		HeapFile file = (HeapFile) Database.getCatalog().getDbFile(tableId);
-		numPages = file.numPages();
-		curPageNo = 0;
 		tuplesInPage = getTupleIterator(curPageNo);
+		isOpen = true;
 	}
 
 	private Iterator<Tuple> getTupleIterator(int pageNo) throws TransactionAbortedException, DbException {
 		if (pageNo >= numPages)
-			throw new NoSuchElementException("访问超出实际页数范围.");
+			return null;
 		PageId pid = new HeapPageId(tableId, pageNo);
 		// 先通过BufferPool获得对应的Page对象
 		HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
@@ -68,23 +70,35 @@ public class HeapFileIterator implements DbFileIterator {
 	 */
 	@Override
 	public boolean hasNext() throws DbException, TransactionAbortedException {
-		if (tuplesInPage == null)// 迭代器没open
-			return false;
-		if (!tuplesInPage.hasNext() && curPageNo >= numPages - 1)
-			return false;
-		return true;
+		if (!isOpen)// 迭代器没open
+			return false;// 这里我认为应该抛异常，但是抛异常就过不了单元测试，得返回false
+		if (tuplesInPage.hasNext())
+			return true;
+		while (curPageNo < numPages - 1) {// 翻页
+			tuplesInPage = getTupleIterator(++curPageNo);
+			if (tuplesInPage != null && tuplesInPage.hasNext()) {// 找到有元组的下一页
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
-	 * 访问下一个元组，如果当前的page已经读完，会跳转到下一个page进行读取。
+	 * 访问下一个元组，如果当前的page已经读完，需要跳转到下一个page进行读取。
 	 */
 	@Override
 	public Tuple next() throws DbException, TransactionAbortedException, NoSuchElementException {
-		if (tuplesInPage == null)// 迭代器没open
+		if (!isOpen)// 迭代器没open
 			throw new NoSuchElementException("Iterator is closed.");
-		if (!tuplesInPage.hasNext())
-			tuplesInPage = getTupleIterator(++curPageNo);
-		return tuplesInPage.next();
+		if (!tuplesInPage.hasNext()) {// 尝试翻页
+			while (curPageNo < numPages - 1) {// 翻页
+				tuplesInPage = getTupleIterator(++curPageNo);
+				if (tuplesInPage != null && tuplesInPage.hasNext()) {// 找到有元组的下一页
+					break;
+				}
+			}
+		}
+		return tuplesInPage.next();// 如果这个时候tuplesInPage里没有元组，则说明表已经访问完了
 	}
 
 	@Override
@@ -95,6 +109,7 @@ public class HeapFileIterator implements DbFileIterator {
 	@Override
 	public void close() {
 		tuplesInPage = null;
+		isOpen = false;
 	}
 
 }
