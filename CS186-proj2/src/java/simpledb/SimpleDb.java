@@ -2,10 +2,13 @@ package simpledb;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 public class SimpleDb {
 	public static void main(String args[]) throws DbException, TransactionAbortedException, IOException {
 		// convert a file
+//		 args = new String[] {"parser","C:\\Users\\DELL\\Desktop\\D\\catalog.txt"};
+		// parser部分可以改用反射来获得文件的绝对路径
 		if (args[0].equals("convert")) {
 			try {
 				if (args.length < 3 || args.length > 5) {
@@ -72,7 +75,8 @@ public class SimpleDb {
 			for (int i = 1; i < args.length; ++i) {
 				newargs[i - 1] = args[i];
 			}
-
+			//newargs[0] = SimpleDb.class.getClassLoader().getResource(newargs[0]).getPath();
+			
 			try {
 				// dynamically load Parser -- if it doesn't exist, print error message
 				Class<?> c = Class.forName("simpledb.Parser");

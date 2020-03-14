@@ -5,6 +5,13 @@ import java.io.Serializable;
 /**
  * JoinPredicate compares fields of two tuples using a predicate. JoinPredicate
  * is most likely used by the Join operator.
+ * <p>
+ * 它与<code>Predicate<code>的区别在于他的<code>filter<code>接受两个Tuple
+ * <p>
+ * 我觉得不用这个类，只借助<code>Predicate<code>也可以实现等价效果
+ * <p>
+ * 但使用这个类可读性好一些
+ * <p>
  */
 public class JoinPredicate implements Serializable {
 

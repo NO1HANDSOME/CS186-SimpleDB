@@ -21,7 +21,7 @@ public class Join extends Operator {
 
 	private TupleDesc td;
 
-	private TupleIterator joinRes;
+	private DbIterator joinRes;
 
 	/**
 	 * Constructor. Accepts to children to join and the predicate to join them on
@@ -37,7 +37,7 @@ public class Join extends Operator {
 		this.p = p;
 		this.child1 = child1;
 		this.child2 = child2;
-		this.td = TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());
+		this.td = TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());// 元组描述不去重
 		joinRes = null;
 	}
 
@@ -83,7 +83,7 @@ public class Join extends Operator {
 	}
 
 	/**
-	 * 低效，等待优化
+	 * 等待优化的算法
 	 */
 	private TupleIterator nestedLoopJoin() throws DbException, TransactionAbortedException {
 		List<Tuple> list = new LinkedList<Tuple>();
@@ -101,6 +101,7 @@ public class Join extends Operator {
 		return new TupleIterator(td, list);
 	}
 
+	/* 联接两个元组,没有去重 */
 	private Tuple mergeTuples(Tuple out, Tuple in) {
 		Tuple newTuple = new Tuple(td);
 		for (int i = 0; i < len1; i++) {

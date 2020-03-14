@@ -68,6 +68,7 @@ public class Delete extends Operator {
 		// some code goes here
 		if (isDone)
 			return null;
+		// 下面删除的逻辑也可以放在open中执行
 		int count = 0;
 		while (child.hasNext()) {
 			Tuple tuple = child.next();

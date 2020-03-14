@@ -1,7 +1,9 @@
 package simpledb;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from disk.
@@ -31,6 +33,11 @@ public class BufferPool {
 	private HashMap<PageId, Page> id2page;
 
 	/**
+	 * BufferPool访问page的记录，按发生时间进行升序排序
+	 */
+	private TreeSet<AccessRecord> id2record;
+
+	/**
 	 * Creates a BufferPool that caches up to numPages pages.
 	 *
 	 * @param numPages maximum number of pages in this buffer pool.
@@ -39,6 +46,7 @@ public class BufferPool {
 		// some code goes here
 		PAGES_NUM = numPages;
 		id2page = new HashMap<PageId, Page>(PAGES_NUM);
+		id2record = new TreeSet<AccessRecord>();
 	}
 
 	/**
@@ -47,7 +55,7 @@ public class BufferPool {
 	 * <p>
 	 * The retrieved page should be looked up in the buffer pool. If it is present,
 	 * it should be returned. If it is not present, it should be added to the buffer
-	 * pool and returned(在proj1中，缓冲池中不需要实现替换策略). If there is insufficient space in
+	 * pool and returned(在proj2中，缓冲池中需要实现替换策略). If there is insufficient space in
 	 * the buffer pool, an page should be evicted and the new page should be added
 	 * in its place.
 	 *
@@ -58,12 +66,14 @@ public class BufferPool {
 	public Page getPage(TransactionId tid, PageId pid, Permissions perm)
 			throws TransactionAbortedException, DbException {
 		// some code goes here
+		// 记录访问
+		recordAccess(tid, pid);
 		// 先从缓冲区中检索
 		if (id2page.containsKey(pid))
 			return id2page.get(pid);
 		int curSize = id2page.size();
-		if (curSize == PAGES_NUM)
-			throw new DbException("BufferPool is full.can not insert any more Pages.");
+		if (curSize == PAGES_NUM)// 执行缓冲区替换策略
+			evictPage();
 		// 从磁盘检索表
 		int tableid = pid.getTableId();
 		DbFile table = Database.getCatalog().getDbFile(tableid);
@@ -75,22 +85,22 @@ public class BufferPool {
 	}
 
 	/**
+	 * 用来记录指定page最近一次的访问时间
+	 */
+	private void recordAccess(TransactionId tid, PageId pid) {
+		long curTime = System.currentTimeMillis();
+		AccessRecord record = new AccessRecord(tid, pid, curTime);
+		id2record.add(record);// O(logn)
+		// System.out.println("add record:" + record + " " + record.getPid());
+	}
+
+	/**
 	 * 快速将页添加进缓冲区
 	 * 
 	 * @param pid
 	 * @param page
 	 */
 	private void insertPage(PageId pid, Page page) {
-		id2page.put(pid, page);
-	}
-
-	/**
-	 * 将一个指定的页对象添加进缓冲区
-	 * 
-	 * @param page
-	 */
-	private void insertPage(Page page) {
-		PageId pid = page.getId();
 		id2page.put(pid, page);
 	}
 
@@ -182,11 +192,16 @@ public class BufferPool {
 	/**
 	 * Flush all dirty pages to disk. NB: Be careful using this routine -- it writes
 	 * dirty data to disk so will break simpledb if running in NO STEAL mode.
+	 * <p>
+	 * 测试用的方法，不需要太过关注，实现功能即可。
 	 */
 	public synchronized void flushAllPages() throws IOException {
 		// some code goes here
 		// not necessary for proj1
-
+		Iterator<AccessRecord> iterator = id2record.iterator();
+		while (iterator.hasNext()) {
+			flushPage(iterator.next().getPid());
+		}
 	}
 
 	/**
@@ -197,6 +212,8 @@ public class BufferPool {
 	public synchronized void discardPage(PageId pid) {
 		// some code goes here
 		// not necessary for proj1
+		id2record.pollFirst();
+		id2page.remove(pid);
 	}
 
 	/**
@@ -207,6 +224,11 @@ public class BufferPool {
 	private synchronized void flushPage(PageId pid) throws IOException {
 		// some code goes here
 		// not necessary for proj1
+		DbFile file = Database.getCatalog().getDbFile(pid.getTableId());
+		Page page = id2page.get(pid);
+		if (page.isDirty() != null)// dirty才flush
+			file.writePage(page);
+		page.markDirty(false, null);
 	}
 
 	/**
@@ -215,15 +237,36 @@ public class BufferPool {
 	public synchronized void flushPages(TransactionId tid) throws IOException {
 		// some code goes here
 		// not necessary for proj1
+		Iterator<AccessRecord> iterator = id2record.iterator();
+		while (iterator.hasNext()) {
+			AccessRecord ar = iterator.next();
+			if (ar.getTid().equals(tid))
+				flushPage(ar.getPid());
+		}
 	}
 
 	/**
 	 * Discards a page from the buffer pool. Flushes the page to disk to ensure
 	 * dirty pages are updated on disk.
+	 * <p>
+	 * Algorithm:LRU
 	 */
 	private synchronized void evictPage() throws DbException {
 		// some code goes here
 		// not necessary for proj1
+		// 得到距离上次访问最长的pid
+		PageId pid = id2record.first().getPid();// O(1)
+		if (id2page.get(pid) == null) {
+			System.out.println("ERROR");
+		}
+		// flush
+		try {
+			flushPage(pid);// 会判断是否dirty，dirty才会flushPage
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// 从BufferPool中移除它
+		discardPage(pid);
 	}
 
 }

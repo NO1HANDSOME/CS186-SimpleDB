@@ -101,6 +101,15 @@ public class HeapFile implements DbFile {
 	public void writePage(Page page) throws IOException {
 		// some code goes here
 		// not necessary for proj1
+		// 得到page的数据
+		byte[] data = page.getPageData();
+		// 计算偏移
+		int offset = page.getId().pageNumber() * BufferPool.PAGE_SIZE;
+		// 通过RandomAccessFile将page写入到磁盘文件
+		RandomAccessFile raf = new RandomAccessFile(getFile(), "rw");// 注意切换模式
+		raf.seek(offset);
+		raf.write(data, 0, data.length);
+		raf.close();
 	}
 
 	/**
@@ -120,9 +129,9 @@ public class HeapFile implements DbFile {
 		int tableId = getId();
 		int pno = 0;
 		HeapPage page = null;
-		while (pno < numPages) {
-			// 通过缓冲区得到有位置插入的page
+		while (pno < numPages) {// 寻找有位置插入的page
 			PageId pid = new HeapPageId(tableId, pno);
+			// 通过缓冲区得到有位置插入的page
 			page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
 			if (page.getNumEmptySlots() > 0) {
 				isOk = true;

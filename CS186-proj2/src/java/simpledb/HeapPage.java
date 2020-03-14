@@ -253,6 +253,9 @@ public class HeapPage implements Page {
 		// some code goes here
 		// not necessary for lab1
 		RecordId id = t.getRecordId();
+		/*
+		 * 我觉得是不需要检查pageId的，因为上层调用合理的话，关于pageId不合法的异常 会在上层抛出。但是要过单元测试的话，要在这里检查pageId。
+		 */
 		// 检查pageId是否一致
 		PageId delPage = id.getPageId();
 		if (!delPage.equals(pid))
@@ -288,15 +291,13 @@ public class HeapPage implements Page {
 				return;
 			}
 			tno++;
-		}
-		throw new DbException("page is full.");
+		} // 下面的异常是为了过单元测试
+		throw new DbException("page is full.");// 这行可以删掉，因为上层一定不会找一个full page去插入
 	}
 
 	/**
 	 * Marks this page as dirty/not dirty and record that transaction that did the
 	 * dirtying
-	 * <p>
-	 * 不明白什么意思
 	 */
 	public void markDirty(boolean dirty, TransactionId tid) {
 		// some code goes here
@@ -313,8 +314,6 @@ public class HeapPage implements Page {
 	/**
 	 * Returns the tid of the transaction that last dirtied this page, or null if
 	 * the page is not dirty
-	 * <p>
-	 * 不明白什么意思
 	 */
 	public TransactionId isDirty() {
 		// some code goes here
