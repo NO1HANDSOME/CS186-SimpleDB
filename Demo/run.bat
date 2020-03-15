@@ -1,1 +1,1 @@
-java -jar simpledb.jar parser C:\Users\DELL\Desktop\D\dblp_simpledb.schema
+java -jar simpledb.jar parser C:\Users\DELL\CS186-SimpleDB\Demo\dblp_simpledb.schema

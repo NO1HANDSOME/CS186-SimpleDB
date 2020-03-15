@@ -6,7 +6,7 @@ import java.io.IOException;
 public class SimpleDb {
 	public static void main(String args[]) throws DbException, TransactionAbortedException, IOException {
 		// convert a file
-		 args = new String[] {"parser","C:\\Users\\DELL\\Desktop\\D\\dblp_simpledb.schema"};
+		 //args = new String[] {"parser","C:\\Users\\DELL\\Desktop\\D\\dblp_simpledb.schema"};
 		// parser部分可以改用反射来获得文件的绝对路径
 		if (args[0].equals("convert")) {
 			try {

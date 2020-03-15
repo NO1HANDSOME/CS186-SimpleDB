@@ -1,6 +1,9 @@
 # SimpleDB Demo
 
-这是一个**演示SQL查询功能**的Demo，已经准备好了CS186提供的测试数据，点击run.bat即可运行SimpleDB。
+这是一个**演示SQL查询功能**的Demo，已经准备好了CS186提供的测试数据，点击run.bat，然后**修改参数**即可运行SimpleDB。
+
+>
+run.bat中默认加载C:\Users\DELL\CS186-SimpleDB\Demo\dblp_simpledb.schema。请根据你Demo文件夹的位置，来正确设置好dblp\_simpledb.schema的路径。
 
 Demo内置了一些表，你可以在Demo文件夹下看到.dat后缀的文件，那些文件就是以二进制形式存储的表数据。
 
