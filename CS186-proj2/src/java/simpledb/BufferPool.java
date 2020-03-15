@@ -3,6 +3,7 @@ package simpledb;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.PriorityQueue;
 import java.util.TreeSet;
 
 /**
@@ -33,9 +34,11 @@ public class BufferPool {
 	private HashMap<PageId, Page> id2page;
 
 	/**
-	 * BufferPool访问page的记录，按发生时间进行升序排序
+	 * BufferPool访问page的记录，按发生时间进行升序排序 一开始用TreeSet，但是TreeSet有Bug，始终去不了重
+	 * <p>
+	 * 我认为是TreeSet的add方法里用了二分的关系
 	 */
-	private TreeSet<AccessRecord> id2record;
+	private PriorityQueue<AccessRecord> id2record;
 
 	/**
 	 * Creates a BufferPool that caches up to numPages pages.
@@ -46,7 +49,7 @@ public class BufferPool {
 		// some code goes here
 		PAGES_NUM = numPages;
 		id2page = new HashMap<PageId, Page>(PAGES_NUM);
-		id2record = new TreeSet<AccessRecord>();
+		id2record = new PriorityQueue<AccessRecord>();
 	}
 
 	/**
@@ -90,8 +93,9 @@ public class BufferPool {
 	private void recordAccess(TransactionId tid, PageId pid) {
 		long curTime = System.currentTimeMillis();
 		AccessRecord record = new AccessRecord(tid, pid, curTime);
-		id2record.add(record);// O(logn)
-		// System.out.println("add record:" + record + " " + record.getPid());
+		id2record.remove(record);
+		id2record.add(record);
+//		System.out.print("recordAccess:" + pid.pageNumber() + "/" + pid.getTableId() + "  ");
 	}
 
 	/**
@@ -102,6 +106,7 @@ public class BufferPool {
 	 */
 	private void insertPage(PageId pid, Page page) {
 		id2page.put(pid, page);
+		//System.out.println("page:" + pid.pageNumber() + "/" + pid.getTableId());
 	}
 
 	/**
@@ -212,7 +217,7 @@ public class BufferPool {
 	public synchronized void discardPage(PageId pid) {
 		// some code goes here
 		// not necessary for proj1
-		id2record.pollFirst();
+		AccessRecord ar = id2record.poll();
 		id2page.remove(pid);
 	}
 
@@ -255,18 +260,16 @@ public class BufferPool {
 		// some code goes here
 		// not necessary for proj1
 		// 得到距离上次访问最长的pid
-		PageId pid = id2record.first().getPid();// O(1)
-		if (id2page.get(pid) == null) {
-			System.out.println("ERROR");
-		}
+		PageId pid = id2record.peek().getPid();// O(1)
 		// flush
 		try {
 			flushPage(pid);// 会判断是否dirty，dirty才会flushPage
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			// 从BufferPool中移除它
+			discardPage(pid);
 		}
-		// 从BufferPool中移除它
-		discardPage(pid);
 	}
 
 }

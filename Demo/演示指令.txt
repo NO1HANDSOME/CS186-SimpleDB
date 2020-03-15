@@ -1,0 +1,26 @@
+// 有结果
+SELECT p.title
+FROM papers p
+WHERE p.title LIKE 'selectivity';
+
+// 有结果
+SELECT p.title, v.name
+FROM papers p, authors a, paperauths pa, venues v
+WHERE a.name = 'E. F. Codd'
+AND pa.authorid = a.id
+AND pa.paperid = p.id
+AND p.venueid = v.id;
+
+// 多条件聚合：结果为空
+SELECT a2.name, count(p.id)
+FROM papers p, authors a1, authors a2, paperauths pa1, paperauths pa2
+WHERE a1.name = 'Michael Stonebraker'
+AND pa1.authorid = a1.id 
+AND pa1.paperid = p.id 
+AND pa2.authorid = a2.id 
+AND pa1.paperid = pa2.paperid
+GROUP BY a2.name
+ORDER BY a2.name;
+
+// 退出
+quit;

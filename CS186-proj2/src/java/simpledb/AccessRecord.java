@@ -47,7 +47,7 @@ public class AccessRecord implements Comparable<AccessRecord> {
 	@Override
 	public int compareTo(AccessRecord o) {
 		// TODO Auto-generated method stub
-		if (this.pid.equals(o.getPid())) {
+		if (pid.equals(o.getPid())) {
 			return 0;
 		}
 		return this.lastAccessTime - o.getLastAccessTime() > 0 ? 1 : -1;
@@ -56,5 +56,10 @@ public class AccessRecord implements Comparable<AccessRecord> {
 	@Override
 	public int hashCode() {
 		return 31 * pid.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return new String(pid.getTableId() + " " + pid.pageNumber());
 	}
 }

@@ -594,7 +594,10 @@ public class Parser {
 			String line;
 			boolean quit = false;
 			while (!quit && (line = reader.readLine("SimpleDb> ")) != null) {
-				// while (!quit && (line="select * from data;") != null) {
+//			while (!quit
+//					&& (line = "SELECT p.title\n" + 
+//							"FROM papers p\n" + 
+//							"WHERE p.title LIKE 'selectivity';") != null) {
 				// Split statements at ';': handles multiple statements on one
 				// line, or one
 				// statement spread across many lines
