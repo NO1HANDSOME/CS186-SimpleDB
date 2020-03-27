@@ -1,0 +1,12 @@
+// 动态规划求最优解的伪码描述
+1. j = set of join nodes 
+2. for (i in 1...|j|):  // First find best plan for single join, then for two joins, etc. 
+3.     for s in {all length i subsets of j} // Looking at a concrete subset of joins(遍历size为i的子集)
+4.       bestPlan = {}  // We want to find the best plan for this concrete subset(对子集找到join的最优解) 
+5.       for s' in {all length i-1 subsets of s} 
+6.            subplan = optjoin(s')  // Look-up in the cache the best query plan for s but with one relation missing
+7.            plan = best way to join (s-s') to subplan // Now find the best plan to extend s' by one join to get s
+8.            if (cost(plan) < cost(bestPlan))
+9.               bestPlan = plan // Update the best plan for computing s
+10.      optjoin(s) = bestPlan// 最优解
+11. return optjoin(j)

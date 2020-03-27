@@ -4,7 +4,11 @@ import java.util.Set;
 import java.util.Vector;
 
 /** A PlanCache is a helper class that can be used to store the best
- * way to order a given set of joins */
+ * way to order a given set of joins 
+ * <p>
+ * 在一般的dp问题中，我们通常用数组保存最优解记录。</br>
+ * 但这里比较特别，它需要这个类来保存最优的JoinOrder。
+ * */
 public class PlanCache {
     HashMap<Set<LogicalJoinNode>,Vector<LogicalJoinNode>> bestOrders= new HashMap<Set<LogicalJoinNode>,Vector<LogicalJoinNode>>();
     HashMap<Set<LogicalJoinNode>,Double> bestCosts= new HashMap<Set<LogicalJoinNode>,Double>();

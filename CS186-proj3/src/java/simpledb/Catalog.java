@@ -59,10 +59,10 @@ public class Catalog {
 			throw new IllegalArgumentException();
 		}
 		int tableid = file.getId();
-		if (name2id.containsKey(name)) {
-			// use the last table to be added as the table for a given name.
-			throw new UnsupportedOperationException("目前不支持添加相同名字的table");
-		}
+//		if (name2id.containsKey(name)) {
+//			// use the last table to be added as the table for a given name.
+//			throw new UnsupportedOperationException("目前不支持添加相同名字的table");
+//		}
 		id2file.put(tableid, file);
 		id2name.put(tableid, name);
 		id2pkey.put(tableid, pkeyField);

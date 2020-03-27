@@ -161,7 +161,7 @@ public class JoinOptimizer {
 		} else if (joinOp.equals(Op.NOT_EQUALS)) {
 			card = card1 * card2;
 		} else {// range join
-			// It is fine to assume that a fixed fraction of 
+			// It is fine to assume that a fixed fraction of
 			// the cross-product is emitted by range scans (say, 30%).
 			card = (int) Math.ceil(card1 * card2 * 0.3);
 		}
@@ -221,9 +221,35 @@ public class JoinOptimizer {
 
 		// See the project writeup for some hints as to how this function
 		// should work.
-
 		// some code goes here
-		// Replace the following
+
+		// 注意这里集合的元素是JoinNode!!!不是Relation
+		// 这个方法我认为还可以用记忆化搜索来完成
+		// DP问题的常规做法，首先建立一个PlanCache
+		PlanCache pc = new PlanCache();
+		for (int i = 1; i <= joins.size(); i++) {
+			// 枚举所有规模为i的子集
+			Set<Set<LogicalJoinNode>> set1 = enumerateSubsets(joins, i);
+			for (Set<LogicalJoinNode> s : set1) {// 对于一个固定的集合s，求它的最优解
+
+				pc.addPlan(s, Double.MAX_VALUE, -1, null);// 固定集合s最优解
+				for (LogicalJoinNode joinToRemove : s) {
+					// 求集合joinSet的最优解与剩余元素joinToRemove的代价
+					double bestCostSoFar = pc.getCost(s);
+					CostCard cc = computeCostAndCardOfSubplan(stats, filterSelectivities, joinToRemove, s,
+							bestCostSoFar, pc);
+					if (cc != null)// 注意上面的方法返回的cc一定是最优的
+						pc.addPlan(s, cc.cost, cc.card, cc.plan);// 找到一个对于集合s更优的解
+				}
+
+			}
+		}
+
+		Set<Set<LogicalJoinNode>> set = enumerateSubsets(joins, joins.size());
+		Iterator<Set<LogicalJoinNode>> itr = set.iterator();
+		joins = pc.getOrder(itr.next());
+		if (explain)
+			printJoins(joins, pc, stats, filterSelectivities);
 		return joins;
 	}
 
@@ -234,6 +260,9 @@ public class JoinOptimizer {
 	 * joinToRemove to joinSet (joinSet should contain joinToRemove), given that all
 	 * of the subsets of size joinSet.size() - 1 have already been computed and
 	 * stored in PlanCache pc.
+	 * <p>
+	 * 这个方法很长,这是因为它考虑除了左深树形式外的Line Plan。<br/>
+	 * 假如只考虑左深树形式的Line Plan，我认为这个方法甚至可以不写。
 	 * 
 	 * @param stats               table stats for all of the tables, referenced by
 	 *                            table names rather than alias (see
