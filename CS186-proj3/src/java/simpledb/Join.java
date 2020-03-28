@@ -2,10 +2,17 @@ package simpledb;
 
 import java.util.*;
 
+import simpledb.Predicate.Op;
+
 /**
  * The Join operator implements the relational join operation.
  */
 public class Join extends Operator {
+
+	/**
+	 * BNL算法中cache的大小
+	 */
+	public static final int BLOCK_MEMROY = 131072;
 
 	private static final long serialVersionUID = 1L;
 
@@ -78,12 +85,65 @@ public class Join extends Operator {
 		super.open();
 		child1.open();
 		child2.open();
-		joinRes = nestedLoopJoin();
+		joinRes = blockNestedLoopJoin();
 		joinRes.open();
 	}
 
 	/**
-	 * 等待优化的算法
+	 * 对左表做缓存<br/>
+	 * 相对于普通的NL算法，能够减少内表的磁盘IO次数
+	 * 
+	 * @throws TransactionAbortedException
+	 * @throws DbException
+	 */
+	private DbIterator blockNestedLoopJoin() throws DbException, TransactionAbortedException {
+		List<Tuple> list = new LinkedList<Tuple>();
+		int cacheSize = BLOCK_MEMROY / child1.getTupleDesc().getSize();
+		ArrayList<Tuple> cache = new ArrayList<Tuple>();
+		while (child1.hasNext()) {
+			Tuple tuple = child1.next();
+			cache.add(tuple);
+			if (cache.size() == cacheSize) {
+				child2.rewind();
+				while (child2.hasNext()) {
+					int index = 0;
+					Tuple right = child2.next();
+					while (index < cache.size()) {
+						Tuple left = cache.get(index++);
+						if (p.filter(left, right)) {
+							Tuple newTuple = mergeTuples(left, right);
+							list.add(newTuple);
+						}
+					}
+				}
+				// 清空cache
+				cache.clear();
+			}
+		}
+		// 处理缓冲区剩余的左表元组
+		if (cache.size() != 0) {
+			child2.rewind();
+			while (child2.hasNext()) {
+				int index = 0;
+				Tuple right = child2.next();
+				while (index < cache.size()) {
+					Tuple left = cache.get(index++);
+					if (p.filter(left, right)) {
+						Tuple newTuple = mergeTuples(left, right);
+						list.add(newTuple);
+					}
+				}
+			}
+		}
+		return new TupleIterator(td, list);
+	}
+
+	private DbIterator hashJoin() {
+		return null;
+	}
+
+	/**
+	 * NL
 	 */
 	private TupleIterator nestedLoopJoin() throws DbException, TransactionAbortedException {
 		List<Tuple> list = new LinkedList<Tuple>();
@@ -100,6 +160,54 @@ public class Join extends Operator {
 		}
 		return new TupleIterator(td, list);
 	}
+
+//	private TupleIterator HashJoin() throws DbException, TransactionAbortedException {
+//		List<Tuple> tuples = new ArrayList<>();
+//		// 根据要join的Id进行分组
+//		HashMap<Integer, List<Tuple>> leftMap = new HashMap<>(); // 一个桶对应分组JoinId相同的Tuple 现在的桶力度特别小，最多情况为重复的值为0则桶数量=元组数量
+//		HashMap<Integer, List<Tuple>> rightMap = new HashMap<>();
+//		while (child1.hasNext()) {
+//			Tuple temp = child1.next();
+//			int hashcode = temp.getField(p.getField1()).hashCode();
+//			List<Tuple> tempTuples = leftMap.get(hashcode);
+//			if (tempTuples == null) {
+//				tempTuples = new ArrayList<>();
+//			}
+//			tempTuples.add(temp);
+//			leftMap.put(hashcode, tempTuples);
+//		}
+//		while (child2.hasNext()) {
+//			Tuple temp = child2.next();
+//			int hashcode = temp.getField(p.getField2()).hashCode();
+//			List<Tuple> tempTuples = rightMap.get(hashcode);
+//			if (tempTuples == null) {
+//				tempTuples = new ArrayList<>();
+//			}
+//			tempTuples.add(temp);
+//			rightMap.put(hashcode, tempTuples);
+//		}
+//		// THEN Nest LOOP JOIN
+//		leftMap.forEach((k, v) -> {
+//			List<Tuple> rightTuples = rightMap.get(k);
+//			if (rightTuples != null && rightTuples.size() > 0) {
+//				Iterator<Tuple> leftTupleIT = v.iterator();
+//				Tuple t1, t2;
+//				while (leftTupleIT.hasNext()) {
+//					t1 = leftTupleIT.next();
+//					Iterator<Tuple> rightTupleIT = rightTuples.iterator();
+//					while (rightTupleIT.hasNext()) {
+//						t2 = rightTupleIT.next();
+//						if (t1 != null && t2 != null && p.filter(t1, t2)) {
+//							tuples.add(mergeTuples(t1, t2));
+//						}
+//					}
+//
+//				}
+//			}
+//		});
+//
+//		return new TupleIterator(getTupleDesc(), tuples);
+//	}
 
 	/* 联接两个元组,没有去重 */
 	private Tuple mergeTuples(Tuple out, Tuple in) {

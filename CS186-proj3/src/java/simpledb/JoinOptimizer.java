@@ -99,11 +99,17 @@ public class JoinOptimizer {
 			// a join algorithm that's more complicated than a basic nested-loops
 			// join.
 
-			// Cost of NL Join
+			// Cost of BNL Join
 			// 这个由CS186提供的公式应该是在最坏情况下的cost
 			// 即缓冲区只能够存在两个关系的各一个磁盘数据块
 			// 这里的IO cost也应包含了磁盘搜索与磁盘传输的cost
-			double joincost = cost1 + card1 * cost2 // IO cost
+//			String tableName = j.t1Alias;
+//			Integer tableId = p.getTableId(tableName);
+			TupleDesc td = p.getTupleDesc(j.t1Alias);
+			int size = td.getSize();
+			int blockSize = Join.BLOCK_MEMROY / size;
+			int numBlock = (int) Math.ceil(card1 * 1.0 / blockSize);
+			double joincost = cost1 + numBlock * cost2 // IO cost
 					+ card1 * card2; // CPU cost
 			return joincost;
 		}

@@ -15,8 +15,8 @@ SimpleDb是一个支持transaction、SQL parser、SQL optimization的关系型�
 1. [Data Manager](https://github.com/NO1HANDSOME/CS186-SimpleDB/tree/master/CS186-proj1)
 2. [Query manager](https://github.com/NO1HANDSOME/CS186-SimpleDB/tree/master/CS186-proj2)
 3. [Simple SQL Demo](https://github.com/NO1HANDSOME/CS186-SimpleDB/tree/master/Demo)
+4. Query Optimizer（文档待更新）
 
 未完成：
 
-1. Query Optimizer
-2. Transactions
+1. Transactions
